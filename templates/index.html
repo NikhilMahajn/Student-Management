@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Student Record Management</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background-color: #f8f9fa; }
+        .container { max-width: 600px; margin: auto; background: white; padding: 20px; border-radius: 10px; box-shadow: 0px 0px 10px #ccc; }
+        input, select, button { width: 100%; padding: 10px; margin: 5px 0; }
+        button { cursor: pointer; border: none; background: #007bff; color: white; border-radius: 5px; }
+        button:hover { background: #0056b3; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid black; padding: 8px; text-align: left; }
+        th { background-color: #007bff; color: white; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Student Record Management</h2>
+        <form id="studentForm">
+            <label>ID:</label>
+            <input type="text" id="studentId" required>
+            <label>Name:</label>
+            <input type="text" id="studentName" required>
+            <label>Age:</label>
+            <input type="number" id="studentAge" required>
+            <label>Gender:</label>
+            <select id="studentGender" required>
+                <option value="Male">Male</option>
+                <option value="Female">Female</option>
+            </select>
+            <button type="button" onclick="addRecord()">Add</button>
+            <button type="button" onclick="updateRecord()">Update</button>
+            <button type="button" onclick="deleteRecord()">Delete</button>
+        </form>
+
+        <h3>Search Student</h3>
+        <input type="text" id="searchId" placeholder="Enter ID to search">
+        <button onclick="searchRecord()">Search</button>
+
+        <p id="response"></p>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Age</th>
+                    <th>Gender</th>
+                </tr>
+            </thead>
+            <tbody id="studentTable"></tbody>
+        </table>
+    </div>
+
+    <script>
+        function addRecord() {
+            let studentData = getFormData();
+            fetch('/add', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(studentData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById("response").innerText = data.message;
+                displayRecords(data.students);
+            })
+            .catch(error => console.error('Error:', error));
+        }
+
+        function searchRecord() {
+			let searchId = document.getElementById("searchId").value.trim(); // Trim spaces
+		
+			if (searchId === "") {
+				document.getElementById("response").innerText = "Please enter a student ID to search.";
+				return;
+			}
+		
+			fetch('/search', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ id: searchId })
+			})
+			.then(response => response.json())
+			.then(data => {
+				if (data.error) {
+					document.getElementById("response").innerText = data.error;
+				} else {
+					document.getElementById("response").innerText = data.message;
+					document.getElementById("studentId").value = data.student.id;
+					document.getElementById("studentName").value = data.student.name;
+					document.getElementById("studentAge").value = data.student.age;
+					document.getElementById("studentGender").value = data.student.gender;
+				}
+			})
+			.catch(error => console.error('Error:', error));
+		}
+		
+
+        function updateRecord() {
+            let studentData = getFormData();
+            fetch('/update', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(studentData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById("response").innerText = data.message;
+                displayRecords(data.students);
+            })
+            .catch(error => console.error('Error:', error));
+        }
+
+        function deleteRecord() {
+            let studentId = document.getElementById("studentId").value;
+            fetch('/delete', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id: studentId })
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById("response").innerText = data.message;
+                displayRecords(data.students);
+            })
+            .catch(error => console.error('Error:', error));
+        }
+
+        function displayRecords(students) {
+            let table = document.getElementById("studentTable");
+            table.innerHTML = '';
+            for (let id in students) {
+                let student = students[id];
+                let row = `<tr><td>${student.id}</td><td>${student.name}</td><td>${student.age}</td><td>${student.gender}</td></tr>`;
+                table.innerHTML += row;
+            }
+        }
+
+        function getFormData() {
+            return {
+                id: document.getElementById("studentId").value,
+                name: document.getElementById("studentName").value,
+                age: document.getElementById("studentAge").value,
+                gender: document.getElementById("studentGender").value
+            };
+        }
+    </script>
+
+    <script type="module">
+        // Import the functions you need from the SDKs you need
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.3.1/firebase-app.js";
+        import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.3.1/firebase-analytics.js";
+        // TODO: Add SDKs for Firebase products that you want to use
+        // https://firebase.google.com/docs/web/setup#available-libraries
+      
+        // Your web app's Firebase configuration
+        // For Firebase JS SDK v7.20.0 and later, measurementId is optional
+        const firebaseConfig = {
+          apiKey: "AIzaSyA16ugJLkguAm285MkwSjqPX2Dh75y7_hE",
+          authDomain: "student-recored-management.firebaseapp.com",
+          projectId: "student-recored-management",
+          storageBucket: "student-recored-management.firebasestorage.app",
+          messagingSenderId: "535877926962",
+          appId: "1:535877926962:web:cee1b0afd25920aff2bc2b",
+          measurementId: "G-SE9N0FF9C7"
+        };
+      
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const analytics = getAnalytics(app);
+      </script>
+</body>
+</html>
